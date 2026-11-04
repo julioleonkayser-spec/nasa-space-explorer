@@ -26,6 +26,6 @@ function setupDateInputs(startInput, endInput) {
   var start = new Date();
   start.setDate(start.getDate() - 9);
 
-  startInput.value = formatDate(start);
-  endInput.value = formatDate(end);
+  startInput.value = "2025-04-17";
+  endInput.value = "2025-04-25";
 }
