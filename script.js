@@ -19,6 +19,9 @@ var modalTitle = document.getElementById("modal-title");
 var modalDate = document.getElementById("modal-date");
 var modalText = document.getElementById("modal-text");
 
+// backup pictures (real APOD data from the course)
+var backupUrl = "https://cdn.jsdelivr.net/gh/GCA-Classroom/apod/data.json";
+
 // the pictures we got from NASA
 var pictures = [];
 
@@ -86,8 +89,59 @@ function getImages() {
       return response.json();
     })
     .then(function (data) {
-      pictures = data;
-      showGallery();
+      // sometimes NASA sends back a plain "NASA Science" logo instead of the real pictures
+      if (isPlaceholder(data)) {
+        console.log("NASA sent the placeholder, using the backup pictures");
+        getBackup(start, end);
+      } else {
+        pictures = data;
+        showGallery();
+      }
+    })
+    .catch(function (error) {
+      console.log(error);
+      getBackup(start, end);
+    });
+}
+
+// check if NASA only sent the "NASA Science" logo
+function isPlaceholder(data) {
+  if (!Array.isArray(data) || data.length === 0) {
+    return true;
+  }
+  for (var i = 0; i < data.length; i++) {
+    if (data[i].title !== "NASA Science") {
+      return false;
+    }
+  }
+  return true;
+}
+
+// backup: a small list of real APOD pictures from our course, filtered by the dates
+function getBackup(start, end) {
+  fetch(backupUrl)
+    .then(function (response) {
+      return response.json();
+    })
+    .then(function (all) {
+      var found = [];
+      for (var i = 0; i < all.length; i++) {
+        if (all[i].date >= start && all[i].date <= end) {
+          found.push(all[i]);
+        }
+      }
+
+      // oldest first
+      found.sort(function (a, b) {
+        return a.date < b.date ? -1 : 1;
+      });
+
+      if (found.length === 0) {
+        gallery.innerHTML = '<p class="placeholder">NASA is not sending pictures for these dates right now. Try September 18 to October 1, 2025.</p>';
+      } else {
+        pictures = found;
+        showGallery();
+      }
     })
     .catch(function (error) {
       console.log(error);
