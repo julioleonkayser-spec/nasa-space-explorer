@@ -53,6 +53,28 @@ function niceDate(dateText) {
   return date.toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" });
 }
 
+// NASA moved its picture site, so the old apod.nasa.gov links do not work anymore.
+// This changes an old link into the new one.
+var monthNames = ["january", "february", "march", "april", "may", "june", "july",
+                  "august", "september", "october", "november", "december"];
+
+function getPicture(item, small) {
+  var link = item.hdurl || item.url;
+
+  if (link.indexOf("apod.nasa.gov/apod/image/") !== -1) {
+    var file = link.split("/").pop();
+    var year = item.date.slice(0, 4);
+    var month = monthNames[parseInt(item.date.slice(5, 7)) - 1];
+    link = "https://assets.science.nasa.gov/content/dam/science/cds/apod/apod/" + year + "/" + month + "/" + file;
+  }
+
+  // the small one loads faster for the gallery cards
+  if (small && link.indexOf("assets.science.nasa.gov") !== -1) {
+    link = link + "?w=800";
+  }
+  return link;
+}
+
 // get the pictures from NASA
 function getImages() {
   var start = startInput.value;
@@ -170,7 +192,7 @@ function showGallery() {
 
     if (item.media_type === "image") {
       var img = document.createElement("img");
-      img.src = item.url;
+      img.src = getPicture(item, true);
       img.alt = item.title;
       imageBox.appendChild(img);
     } else {
@@ -220,8 +242,7 @@ function openModal(number) {
 
   if (item.media_type === "image") {
     var bigImg = document.createElement("img");
-    // hdurl is the big version, some entries don't have it
-    bigImg.src = item.hdurl || item.url;
+    bigImg.src = getPicture(item, false);
     bigImg.alt = item.title;
     modalMedia.appendChild(bigImg);
   } else if (item.url.indexOf("youtube.com/embed") !== -1) {
